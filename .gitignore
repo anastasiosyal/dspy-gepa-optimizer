@@ -1,0 +1,36 @@
+# local agent config / planning brief — never commit
+.claude/
+GOAL.md
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+*.egg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.ipynb_checkpoints/
+
+# secrets / env
+.env
+.env.*
+
+# dspy / mlflow / model caches
+.dspy_cache/
+mlruns/
+*.sqlite
+
+# run artifacts
+outputs/
+gepa_logs*/
+optimized_*.json
+run_*.log
+
+# locally-generated charts (render here, copy into a post if needed)
+charts/
