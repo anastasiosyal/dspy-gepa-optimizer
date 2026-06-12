@@ -14,8 +14,8 @@ import dspy
 
 import config
 from data import load_splits
-from evalutil import macro_f1, score, unfair_recall
-from metric import fairness_metric
+from evalutil import macro_f1, score, unfair_precision, unfair_recall
+from metric import fairness_metric, fairness_metric_recall
 from modules import FairnessClassifier
 
 
@@ -31,7 +31,7 @@ def report(program, test, name: str, threads: int = 12):
     preds = program.batch(test, num_threads=threads, max_errors=len(test))
     r = score(test, preds)
     f1 = macro_f1(r["conf"])
-    print(f"[{name}] acc {r['acc']:.1%}  macro-F1 {f1:.3f}  unfair-recall {unfair_recall(r['conf']):.0%}  ({r['correct']}/{r['n']})")
+    print(f"[{name}] acc {r['acc']:.1%}  macro-F1 {f1:.3f}  unfair-recall {unfair_recall(r['conf']):.0%}  unfair-prec {unfair_precision(r['conf']):.0%}  ({r['correct']}/{r['n']})")
     return r["acc"], f1
 
 
@@ -44,7 +44,10 @@ def main() -> None:
     ap.add_argument("--logdir", default=None)
     ap.add_argument("--threads", type=int, default=12)
     ap.add_argument("--budget", type=int, default=6000, help="GEPA max_metric_calls")
+    ap.add_argument("--metric", choices=["balanced", "recall"], default="balanced",
+                    help="balanced = exact-match; recall = penalise missed violations harder than over-flags")
     args = ap.parse_args()
+    metric_fn = fairness_metric_recall if args.metric == "recall" else fairness_metric
     out = args.out or f"optimized_utos_seed{args.seed}.json"
     logdir = args.logdir or f"gepa_logs_utos_seed{args.seed}"
 
@@ -59,7 +62,7 @@ def main() -> None:
 
     print("=" * 64, f"\nGEPA optimizing (discovering the unfairness rubric)... budget={args.budget}")
     optimized = dspy.GEPA(
-        metric=fairness_metric,
+        metric=metric_fn,
         max_metric_calls=args.budget,
         reflection_lm=build_reflection_lm(),
         reflection_minibatch_size=5,

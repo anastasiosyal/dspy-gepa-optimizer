@@ -1,12 +1,34 @@
-# dspy-gepa-optimizer
+# Automatic prompt evolution with DSPy + GEPA
 
-When does automatic **prompt optimization** (DSPy + GEPA) actually help — and when is it a waste?
-This repo answers it honestly on real data, and lands two findings most "GEPA boosted my prompt"
-posts skip.
+A reproducible DSPy/GEPA case study in **automatic prompt optimisation**: define the loop, let it
+rewrite the prompt, measure the lift.
+
+The current prompt-engineering conversation is drifting toward
+[loop engineering](https://addyo.substack.com/p/loop-engineering): stop prompting the model
+turn-by-turn, and design the system that observes feedback and improves itself. This repo is that
+idea applied to prompts. Start with one deliberately bare instruction, run it against labelled
+examples, return feedback on the failures, let GEPA rewrite the instruction, and repeat until the
+budget is exhausted.
+
+Full write-up: [GEPA wrote its own legal rubric — and caught 33% more unfair contract clauses](https://medium.com/empirical-engineer/gepa-wrote-its-own-legal-rubric-and-caught-33-more-unfair-contract-clauses-913a2d7d8ad5)
 
 **The task:** classify a Terms-of-Service clause as **unfair to the consumer** or **fair**
 ([LexGLUE `unfair_tos`](https://huggingface.co/datasets/coastalcph/lex_glue), balanced 50/50).
 Every concept is defined from scratch in [`CONCEPTS.md`](CONCEPTS.md).
+
+## What this shows
+
+Instead of hand-tuning a prompt, you define the optimisation loop:
+
+1. a DSPy task with typed inputs and outputs;
+2. labelled examples from public data;
+3. a metric that scores correctness;
+4. written feedback explaining why misses are wrong;
+5. a GEPA budget for evolving better instructions.
+
+On this task, the loop turns a one-line prompt with no criteria into an explicit unfairness rubric.
+The useful lesson is not "legal AI". It is that prompts can be treated as software artefacts:
+generated, evaluated, versioned, and improved against a metric.
 
 ## Result — GEPA on the held-out test (300 balanced clauses)
 
@@ -37,13 +59,16 @@ from **65% → 86.5% on average, 91% on the best of four runs**.
 ## Run it
 
 ```bash
-pip install -r requirements.txt
-cp .env.example .env          # point at any OpenAI-compatible endpoint (see .env.example)
-python baseline.py --split test     # baseline accuracy / unfair-recall / confusion
-python optimize.py                  # baseline -> GEPA -> optimized, + the evolved rubric
+uv venv
+uv pip install -r requirements.txt
+cp .env.example .env                # point at any OpenAI-compatible endpoint
+.venv/bin/python baseline.py --split test
+.venv/bin/python optimize.py
 ```
 
 Set `LLM_PROXY_MODEL` to a cheap task model and `LLM_PROXY_REFLECTION_MODEL` to a strong one.
+`optimize.py` defaults to a 6,000-call GEPA budget, so run `baseline.py` first as the quick smoke
+test.
 
 ## Layout
 

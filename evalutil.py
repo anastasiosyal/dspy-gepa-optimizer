@@ -38,3 +38,7 @@ def macro_f1(conf) -> float:
 
 def unfair_recall(conf) -> float:
     return _prf(conf, "unfair")[1]
+
+
+def unfair_precision(conf) -> float:
+    return _prf(conf, "unfair")[0]
