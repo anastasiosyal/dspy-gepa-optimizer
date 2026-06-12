@@ -1,16 +1,20 @@
-# Automatic prompt evolution with DSPy + GEPA
+# Loop engineering with DSPy
 
-A reproducible DSPy/GEPA case study in **automatic prompt optimisation**: define the loop, let it
-rewrite the prompt, measure the lift.
+There's always been a person inside the prompt-tuning loop: write a prompt, run it over a batch
+of examples, squint at the failures, adjust a sentence, run it again. It's unglamorous, but it's
+genuinely how prompts get good: try, inspect, rewrite.
 
-The current prompt-engineering conversation is drifting toward
-[loop engineering](https://addyo.substack.com/p/loop-engineering): stop prompting the model
-turn-by-turn, and design the system that observes feedback and improves itself. This repo is that
-idea applied to prompts. Start with one deliberately bare instruction, run it against labelled
-examples, return feedback on the failures, let GEPA rewrite the instruction, and repeat until the
-budget is exhausted.
+Nothing about that loop actually needs the person inside it.
 
-Full write-up: [GEPA wrote its own legal rubric — and caught 33% more unfair contract clauses](https://medium.com/empirical-engineer/gepa-wrote-its-own-legal-rubric-and-caught-33-more-unfair-contract-clauses-913a2d7d8ad5)
+This repo is a reproducible experiment in **automatic prompt optimisation** with DSPy + GEPA. You
+hand over the same things the human was working from anyway — a starting prompt, labelled
+examples, a metric, and feedback on what went wrong — and the system runs the iteration itself:
+try a prompt variant, score it, read the misses, rewrite the instruction, repeat.
+
+The human's place is outside the loop, orchestrating: you define the goal, the metric, and the
+feedback. The loop finds the wording.
+
+Full write-up: [Loop engineering with DSPy: let GEPA evolve the prompt](https://medium.com/empirical-engineer/gepa-wrote-its-own-legal-rubric-and-caught-33-more-unfair-contract-clauses-913a2d7d8ad5)
 
 **The task:** classify a Terms-of-Service clause as **unfair to the consumer** or **fair**
 ([LexGLUE `unfair_tos`](https://huggingface.co/datasets/coastalcph/lex_glue), balanced 50/50).
@@ -18,7 +22,7 @@ Every concept is defined from scratch in [`CONCEPTS.md`](CONCEPTS.md).
 
 ## What this shows
 
-Instead of hand-tuning a prompt, you define the optimisation loop:
+Instead of hand-tuning a prompt, you define the loop:
 
 1. a DSPy task with typed inputs and outputs;
 2. labelled examples from public data;
@@ -44,7 +48,7 @@ classifier is cheap Haiku throughout.
 From a one-line prompt with no criteria, GEPA **discovered and wrote the unfairness rubric**
 (unilateral termination/modification, price-change-at-will, forced arbitration, choice of law…)
 plus a *"don't over-flag routine clauses"* guardrail — lifting violation-catch (unfair-recall)
-from **65% → 86.5% on average, 91% on the best of four runs**.
+from **65% → 86.5% on average, 91% on the best of four runs**. Nobody hand-tuned a word.
 
 ## Two findings
 
